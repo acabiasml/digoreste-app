@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Digoreste</string>
+    <string name="apoio">Apoio</string>
+    <string name="logodigoreste">Logo Digoreste</string>
+    <string name="logopgfa">Logo PGFA</string>
+    <string name="logocnpq">Logo CNPQ</string>
+    <string name="logoufmt">Logo UFMT</string>
+    <string name="logado">logado</string>
+
+    <string name="hello_world">Olá mundo!</string>
+    <string name="action_settings">Configurações</string>
+    <string name="action_second_activity">Sobre</string>
+    <string name="action_exit">Sair</string>string>
+    <string name="action_facebook">Facebook</string>
+    <string name="action_youtube">YouTube</string>
+</resources>
