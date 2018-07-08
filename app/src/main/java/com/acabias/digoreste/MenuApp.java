@@ -40,6 +40,7 @@ public class MenuApp extends AppCompatActivity {
     }
 
 
+    //O botão do menu superior
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
