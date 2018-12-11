@@ -8,10 +8,12 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,6 +27,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
@@ -39,10 +42,13 @@ public class Pergunta extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     RequestQueue requestQueue;
     static final String REQ_TAG = "VACTIVITY";
-    private TextView enunciado, pontuacao;
+    private TextView enunciado, pontuacao, apresentadas, erros, pulos;
     private Button opcao1, opcao2, opcao3, opcao4, opcao5;
-    private String opcert1, opcert2, opcert3, opcert4, opcert5;
-    private int pontos;
+    private String opcert1, opcert2, opcert3, opcert4, opcert5, dicaPergunta;
+    private int pontos, apresenta, erro, pulo;
+    ArrayList<String> listaPerguntas;
+    int contaPergunta;
+    ProgressBar carregando;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +57,19 @@ public class Pergunta extends AppCompatActivity {
         requestQueue = RequestQueueSingleton.getInstance(this.getApplicationContext()).getRequestQueue();
 
         pontos = 0;
-        pontuacao = (TextView)findViewById(R.id.textView5);
+        apresenta = 0;
+        erro = 0;
+        pulo = 0;
+
+        pontuacao = findViewById(R.id.textView5);
+        apresentadas  = findViewById(R.id.textView14);
+        erros = findViewById(R.id.textView16);
+        pulos = findViewById(R.id.textView20);
+
+        listaPerguntas = new ArrayList<>();
+        contaPergunta = 0;
+
+        carregando = (ProgressBar)findViewById(R.id.progressBar);
 
         mToolbar = (Toolbar) findViewById(R.id.tb_main);
         mToolbar.setTitle("Digoreste");
@@ -106,6 +124,8 @@ public class Pergunta extends AppCompatActivity {
 
     public void geraPergunta() {
 
+        carregando.setVisibility(View.VISIBLE);
+
         String url = "http://digoreste.ic.ufmt.br/site/consultas/pergunta.php";
             StringRequest stringRequest = new StringRequest(Request.Method.POST, url, respostaPergunta(), getPostErrorListener()) {
                 protected Map<String, String> getParams() throws com.android.volley.AuthFailureError {
@@ -129,43 +149,70 @@ public class Pergunta extends AppCompatActivity {
                     JSONObject pergunta = new JSONArray(respostaDoServidor.getString("mensagem")).getJSONObject(0);
 
                     if (status.contains("ok")) {
-                        enunciado.setText(pergunta.getString("descricao"));
 
-                        JSONArray respostas = new JSONArray(pergunta.getString("opcoes"));
-
-                        for(int i = 0; i < respostas.length(); i++){
-
-                            JSONObject opc = new JSONObject(respostas.get(i).toString());
-
-                            switch (i) {
-                                case 0:
-                                    opcert1 = opc.getString("correta");
-                                    opcao1.setText(opc.getString("descricao"));
-                                    opcao1.setVisibility(View.VISIBLE);
-                                    break;
-                                case 1:
-                                    opcert2 = opc.getString("correta");
-                                    opcao2.setText(opc.getString("descricao"));
-                                    opcao2.setVisibility(View.VISIBLE);
-                                    break;
-                                case 2:
-                                    opcert3 = opc.getString("correta");
-                                    opcao3.setText(opc.getString("descricao"));
-                                    opcao3.setVisibility(View.VISIBLE);
-                                    break;
-                                case 3:
-                                    opcert4 = opc.getString("correta");
-                                    opcao4.setText(opc.getString("descricao"));
-                                    opcao4.setVisibility(View.VISIBLE);
-                                    break;
-                                case 4:
-                                    opcert5 = opc.getString("correta");
-                                    opcao5.setText(opc.getString("descricao"));
-                                    opcao5.setVisibility(View.VISIBLE);
-                                    break;
+                        if(listaPerguntas.contains(pergunta.getString("id"))){
+                            contaPergunta = contaPergunta + 1;
+                            if(contaPergunta >= 3){
+                                listaPerguntas.removeAll(listaPerguntas);
+                                contaPergunta = 0;
                             }
-                        }
+                            geraPergunta();
+                        }else{
 
+                            if(contaPergunta > 0){
+                                contaPergunta = contaPergunta - 1;
+                            }
+
+                            listaPerguntas.add(pergunta.getString("id"));
+
+                            apresenta = apresenta + 1;
+                            apresentadas.setText(String.valueOf(apresenta));
+
+                            enunciado.setText(pergunta.getString("descricao"));
+
+                            if(TextUtils.isEmpty(pergunta.getString("dica"))){
+                                dicaPergunta = "Sem dica cadastrada para esta pergunta";
+                            }else{
+                                dicaPergunta = pergunta.getString("dica");
+                            }
+
+                            JSONArray respostas = new JSONArray(pergunta.getString("opcoes"));
+
+                            for(int i = 0; i < respostas.length(); i++){
+
+                                JSONObject opc = new JSONObject(respostas.get(i).toString());
+
+                                switch (i) {
+                                    case 0:
+                                        opcert1 = opc.getString("correta");
+                                        opcao1.setText(opc.getString("descricao"));
+                                        opcao1.setVisibility(View.VISIBLE);
+                                        break;
+                                    case 1:
+                                        opcert2 = opc.getString("correta");
+                                        opcao2.setText(opc.getString("descricao"));
+                                        opcao2.setVisibility(View.VISIBLE);
+                                        break;
+                                    case 2:
+                                        opcert3 = opc.getString("correta");
+                                        opcao3.setText(opc.getString("descricao"));
+                                        opcao3.setVisibility(View.VISIBLE);
+                                        break;
+                                    case 3:
+                                        opcert4 = opc.getString("correta");
+                                        opcao4.setText(opc.getString("descricao"));
+                                        opcao4.setVisibility(View.VISIBLE);
+                                        break;
+                                    case 4:
+                                        opcert5 = opc.getString("correta");
+                                        opcao5.setText(opc.getString("descricao"));
+                                        opcao5.setVisibility(View.VISIBLE);
+                                        break;
+                                }
+                            }
+
+                            carregando.setVisibility(View.INVISIBLE);
+                        }
                     } else {
                         Toast.makeText(Pergunta.this, "Erro: " + respostaDoServidor.getString("mensagem"), Toast.LENGTH_SHORT).show();
                     }
@@ -198,9 +245,20 @@ public class Pergunta extends AppCompatActivity {
         opcao5.setVisibility(View.GONE);
     }
 
+    public void clicouPular(View view){
+        pulo = pulo + 1;
+        pulos.setText(String.valueOf(pulo));
+
+        proxima(view);
+    }
+
     public void proxima(View view){
         botoesInvisiveis();
         geraPergunta();
+    }
+
+    public void dica(View view){
+        Toast.makeText(Pergunta.this, dicaPergunta, Toast.LENGTH_SHORT).show();
     }
 
     public void respondendo(View view){
@@ -210,31 +268,26 @@ public class Pergunta extends AppCompatActivity {
         switch(view.getId()){
             case R.id.button4:
                 if(opcert1.contains("s")){
-                    pontos = pontos + 1;
                     daique = 1;
                 }
                 break;
             case R.id.button5:
                 if(opcert2.contains("s")){
-                    pontos = pontos + 1;
                     daique = 1;
                 }
                 break;
             case R.id.button6:
                 if(opcert3.contains("s")){
-                    pontos = pontos + 1;
                     daique = 1;
                 }
                 break;
             case R.id.button9:
                 if(opcert4.contains("s")){
-                    pontos = pontos + 1;
                     daique = 1;
                 }
                 break;
             case R.id.button10:
                 if(opcert5.contains("s")){
-                    pontos = pontos + 1;
                     daique = 1;
                 }
                 break;
@@ -242,7 +295,6 @@ public class Pergunta extends AppCompatActivity {
                 throw new RuntimeException("Unknow button ID");
         }
 
-        pontuacao.setText(String.valueOf(pontos));
         acertou(view, daique);
         proxima(view);
     }
@@ -254,10 +306,14 @@ public class Pergunta extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(view.getContext());
 
         if(resposta == 1){
+            pontos = pontos + 1;
+            pontuacao.setText(String.valueOf(pontos));
             builder.setTitle("Bom trabalho");
             builder.setMessage("Você acertou! =D");
             image.setImageResource(R.drawable.acertou);
         }else{
+            erro = erro + 1;
+            erros.setText(String.valueOf(erro));
             builder.setTitle("Eita");
             builder.setMessage("Você errou :(");
             image.setImageResource(R.drawable.errou);
