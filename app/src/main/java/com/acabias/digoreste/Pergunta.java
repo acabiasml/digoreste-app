@@ -152,7 +152,7 @@ public class Pergunta extends AppCompatActivity {
 
                         if(listaPerguntas.contains(pergunta.getString("id"))){
                             contaPergunta = contaPergunta + 1;
-                            if(contaPergunta >= 3){
+                            if(contaPergunta >= 50){
                                 listaPerguntas.removeAll(listaPerguntas);
                                 contaPergunta = 0;
                             }
@@ -160,7 +160,7 @@ public class Pergunta extends AppCompatActivity {
                         }else{
 
                             if(contaPergunta > 0){
-                                contaPergunta = contaPergunta - 1;
+                                contaPergunta = 0;
                             }
 
                             listaPerguntas.add(pergunta.getString("id"));
